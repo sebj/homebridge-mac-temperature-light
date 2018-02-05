@@ -7,9 +7,8 @@ serialNumber.preferUUID = true;
 let Service, Characteristic, serial;
 
 serialNumber((err, value) => {
-	if (!err) {
+	if (!err)
 		this.serial = value;
-	}
 });
 
 module.exports = homebridge => {
@@ -66,6 +65,7 @@ class TemperatureAccessory {
 class AmbientLightAccessory {
 
 	constructor (log, config) {
+		this.log = log;
 		this.config = config;
 		this.name = this.config.name || 'macOS Ambient Light';
 
@@ -86,7 +86,13 @@ class AmbientLightAccessory {
 			if (!error) {
 				const rawValue = Number(stdout);
 				const scaledValue = (rawValue/(2^26))*100000;
-				const value = Math.round(scaledValue/15);
+				let value = Math.round(scaledValue/15);
+
+				// Enforce minimum value
+				if (value <= 0.0001)
+					value = 0.0001;
+
+				this.log(`Ambient Light: Converted from raw value ${rawValue} to {value}`);
 
 				this.service
 					.getCharacteristic(Characteristic.CurrentAmbientLightLevel)
