@@ -4,7 +4,7 @@ const os = require("os");
 
 serialNumber.preferUUID = true;
 
-let Service, Characteristic, serialNumber;
+let Service, Characteristic, serial;
 
 serialNumber((err, value) => {
 	if (!err) {
@@ -23,18 +23,16 @@ class TemperatureAccessory {
 
 	constructor (log, config) {
 		this.config = config;
-		this.manufacturer = 'Unknown Manufacturer';
-		this.model = 'Unknown Apple';
-		this.serial = 'Undefined serial'
+		this.name = this.config.name || 'macOS Temperature';
 		this.units = 'C';
 
 		this.informationService = new Service.AccessoryInformation();
 		this.informationService
-				.setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
-				.setCharacteristic(Characteristic.Model, this.model)
-				.setCharacteristic(Characteristic.SerialNumber, this.serial);
+				.setCharacteristic(Characteristic.Manufacturer, 'Unknown Manufacturer')
+				.setCharacteristic(Characteristic.Model, 'Unknown Apple')
+				.setCharacteristic(Characteristic.SerialNumber, serial || 'Undefined serial');
 
-		this.service = new Service.TemperatureSensor(this.config.name);
+		this.service = new Service.TemperatureSensor(this.name);
 		this.service
 				.getCharacteristic(Characteristic.CurrentTemperature)
 				.on('get', this.getState.bind(this));
@@ -67,17 +65,15 @@ class AmbientLightAccessory {
 
 	constructor (log, config) {
 		this.config = config;
-		this.manufacturer = 'Unknown Manufacturer';
-		this.model = 'Unknown Apple';
-		this.serial = 'Undefined serial';
+		this.name = this.config.name || 'macOS Ambient Light';
 
 		this.informationService = new Service.AccessoryInformation();
 		this.informationService
-				.setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
-				.setCharacteristic(Characteristic.Model, this.model)
-				.setCharacteristic(Characteristic.SerialNumber, this.serial);
+				.setCharacteristic(Characteristic.Manufacturer, 'Unknown Manufacturer')
+				.setCharacteristic(Characteristic.Model, 'Unknown Apple')
+				.setCharacteristic(Characteristic.SerialNumber, serial || 'Undefined serial');
 
-		this.service = new Service.LightSensor(this.config.name);
+		this.service = new Service.LightSensor(this.name);
 		this.service
 				.getCharacteristic(Characteristic.CurrentAmbientLightLevel)
 				.on('get', this.getState.bind(this));
