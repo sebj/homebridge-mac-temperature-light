@@ -1,0 +1,23 @@
+{
+	"name": "homebridge-mac-temperature-light",
+	"version": "1.0.0",
+	"description": "",
+	"private": true,
+	"keywords": [
+		"homebridge-plugin"
+	],
+	"engines": {
+		"node": ">=7.0.0",
+		"homebridge": ">=0.4.32"
+	},
+	"author": {
+		"name": "Seb Jachec"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/sebj/homebridge-mac-temperature-light.git"
+	},
+	"dependencies": {
+		"serial-number": "latest"
+	}
+}
