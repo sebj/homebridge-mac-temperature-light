@@ -84,8 +84,9 @@ class AmbientLightAccessory {
 	getState (callback) {
 		execFile("room", ["-l"], (error, stdout, stderr) => {
 			if (!error) {
-				// Convert from percentage to 
-				const value = ((Number(stdout)/100)*(2^26))/(2^26);
+				const rawValue = Number(stdout);
+				const scaledValue = (rawValue/(2^26))*100000;
+				const value = Math.round(scaledValue/15);
 
 				this.service
 					.getCharacteristic(Characteristic.CurrentAmbientLightLevel)
