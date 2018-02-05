@@ -92,7 +92,7 @@ class AmbientLightAccessory {
 				if (value <= 0.0001)
 					value = 0.0001;
 
-				this.log(`Ambient Light: Converted from raw value ${rawValue} to {value}`);
+				this.log(`Ambient Light: Converted from raw value ${rawValue} to ${value}`);
 
 				this.service
 					.getCharacteristic(Characteristic.CurrentAmbientLightLevel)
