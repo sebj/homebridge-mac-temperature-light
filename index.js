@@ -58,7 +58,7 @@ class TemperatureAccessory {
 		});
 	}
 
-	getServices () => [informationService, service];
+	getServices = () => [informationService, service]
 }
 
 class AmbientLightAccessory {
@@ -97,5 +97,5 @@ class AmbientLightAccessory {
 		});
 	}
 
-	getServices () => [this.informationService, this.service]
+	getServices = () => [informationService, service]
 }
