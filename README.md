@@ -1,6 +1,6 @@
 # homebridge-mac-temperature-light
 
-A [Homebridge](https://github.com/nfarina/homebridge) switch plugin to .
+A [Homebridge](https://github.com/nfarina/homebridge) plugin to .
 
 ## Installation
 
@@ -10,19 +10,3 @@ A [Homebridge](https://github.com/nfarina/homebridge) switch plugin to .
 
 ## Configuration
 
-Your Homebridge config file (`~/.homebridge/config.json`) must include a `ComputerSleep` accessory with a name of your choosing for this plugin to function.
-
-Example:
-```
-"accessories": [
-    {
-        "accessory": "ComputerSleep",
-        "name": "Office PC"
-    }
-]
-```
-
-## Usage
-* Create an accessory as shown above in **Configuration** 
-    * Setting `name` to the name of your device is recommended - 'Gaming PC', 'MacBook Pro', etc.
-* The accessory will show as On in HomeKit when your device is awake (default), and Off when it is toggled off to sleep.

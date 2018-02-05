@@ -4,69 +4,102 @@ const os = require("os");
 
 serialNumber.preferUUID = true;
 
-let Service, Characteristic;
+let Service, Characteristic, serialNumber;
+
+serialNumber((err, value) => {
+	if (!err) {
+		this.serial = value;
+	}
+});
 
 module.exports = homebridge => {
 	Service = homebridge.hap.Service;
 	Characteristic = homebridge.hap.Characteristic;
-	homebridge.registerAccessory('homebridge-mac-temperature-light', 'MacTemperatureAmbientLight', DeviceStateAccessory);
+	homebridge.registerAccessory('homebridge-mac-temperature-light', 'MacTemperature', TemperatureAccessory);
+	homebridge.registerAccessory('homebridge-mac-temperature-light', 'MacAmbientLight', AmbientLightAccessory);
 }
 
-class DeviceStateAccessory {
+class TemperatureAccessory {
 
 	constructor (log, config) {
-		this.log = log;
 		this.config = config;
 		this.manufacturer = 'Unknown Manufacturer';
 		this.model = 'Unknown Apple';
 		this.serial = 'Undefined serial'
-		this.service = 'Switch';
 		this.units = 'C';
 
-		serialNumber((err, value) => {
-			if (!err) {
-				this.serial = value;
-			}
-		});
+		this.informationService = new Service.AccessoryInformation();
+		this.informationService
+				.setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
+				.setCharacteristic(Characteristic.Model, this.model)
+				.setCharacteristic(Characteristic.SerialNumber, this.serial);
+
+		this.service = new Service.TemperatureSensor(this.config.name);
+		this.service
+				.getCharacteristic(Characteristic.CurrentTemperature)
+				.on('get', this.getState.bind(this));
 	}
 
 	getState (callback) {
 		execFile("room", ["-t"], (error, stdout, stderr) => {
 			if (!error) {
-				console.log(stdout);	
+				const value = Number(stdout);
+
+				this.service
+					.getCharacteristic(Characteristic.CurrentTemperature)
+					.updateValue(value, null);
+					
+				callback(null, value);
+
+				return value;
+
+			} else {
+				callback(error, null);
+				return error;
 			}
 		});
+	}
 
-		const value = 21.0;
+	getServices () => [informationService, service];
+}
 
-		if (value) {
-			this.temperatureService
-				.getCharacteristic(Characteristic.CurrentTemperature).updateValue(value, null);
+class AmbientLightAccessory {
+
+	constructor (log, config) {
+		this.config = config;
+		this.manufacturer = 'Unknown Manufacturer';
+		this.model = 'Unknown Apple';
+		this.serial = 'Undefined serial';
+
+		this.informationService = new Service.AccessoryInformation();
+		this.informationService
+				.setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
+				.setCharacteristic(Characteristic.Model, this.model)
+				.setCharacteristic(Characteristic.SerialNumber, this.serial);
+
+		this.service = new Service.LightSensor(this.config.name);
+		this.service
+				.getCharacteristic(Characteristic.CurrentAmbientLightLevel)
+				.on('get', this.getState.bind(this));
+	}
+
+	getState (callback) {
+		execFile("room", ["-l"], (error, stdout, stderr) => {
+			if (!error) {
+				// Convert from percentage to 
+				const value = ((Number(stdout)/100)*(2^26))/(2^26);
+
+				this.service
+					.getCharacteristic(Characteristic.CurrentAmbientLightLevel)
+					.updateValue(value, null);
+
 				callback(null, value);
-			return value;
 
-		} else {
-			callback(error, null);
-			return error;
-		}
+			} else {
+				callback(error, null);
+			}
+		});
 	}
 
-	getServices () {
-		const informationService = new Service.AccessoryInformation();
-		
-		informationService
-			.setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
-			.setCharacteristic(Characteristic.Model, this.model)
-			.setCharacteristic(Characteristic.SerialNumber, this.serial);
-
-		const temperatureService = new Service.TemperatureSensor(this.config.name);
-
-		temperatureService
-			.getCharacteristic(Characteristic.CurrentTemperature)
-			.on('get', this.getState.bind(this));
-
-		this.temperatureService = temperatureService;
-
-		return [temperatureService];
-	}
+	getServices () => [this.informationService, this.service]
 }
