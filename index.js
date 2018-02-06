@@ -1,7 +1,6 @@
 const serialNumber = require('serial-number');
-const execFile = require("child_process").execFile;
-const os = require("os");
-const Light = require('./build/Release/Light');
+const Light = require('./build/Release/Light.node');
+const Temperature = require('./build/Release/Temperature.node');
 
 serialNumber.preferUUID = true;
 
@@ -38,24 +37,30 @@ class TemperatureAccessory {
 	}
 
 	getState (callback) {
-		execFile("room", ["-t"], (error, stdout, stderr) => {
-			if (!error && stdout) {
-				const value = Number(stdout);
+		const rawTempValues = Temperature.getTemperatureSensorValues();
+		if (rawTempValues && rawTempValues.length > 0) {
+			const minTemp = Math.min(...rawTempValues);
 
-				if (isFinite(value)) {
-					this.service
+			const count = rawTempValues.length;
+			const avgTemp = rawTempValues.reduce((acc, val) => acc + (val / count), 0);
+
+			const correctionValue = -7.25;
+			const correctedMinTemp = minTemp + correctionValue;
+
+			const weightedTempMean = (correctedMinTemp * 0.8) + ((avgTemp / 2) * 0.2);
+
+			const value = weightedTempMean;
+
+			this.service
 					.getCharacteristic(Characteristic.CurrentTemperature)
 					.updateValue(value, null);
 					
-					callback(null, value);
+			callback(null, value);
+			return value;
+		}
 
-					return value;
-				}
-			}
-
-			callback(error, null);
-			return error;
-		});
+		callback(null, null);
+		return null;
 	}
 
 	getServices () {
@@ -94,6 +99,7 @@ class AmbientLightAccessory {
 			}
 
 			if (isFinite(rawValue)) {
+				// Divide by maximum Mac light sensor value, multiply by maximum lux value.
 				const scaledValue = (rawValue/67092480)*100000;
 				let value = Math.round(scaledValue/48);
 
