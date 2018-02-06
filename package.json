@@ -3,11 +3,15 @@
 	"version": "1.0.0",
 	"description": "",
 	"private": true,
+	"os": [
+		"darwin"
+	],
 	"keywords": [
+		"homebridge",
 		"homebridge-plugin"
 	],
 	"engines": {
-		"node": ">=7.0.0",
+		"node": ">=9.5.0",
 		"homebridge": ">=0.4.32"
 	},
 	"author": {

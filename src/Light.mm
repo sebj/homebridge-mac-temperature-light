@@ -1,0 +1,42 @@
+#import <IOKit/IOKitLib.h>
+#include <node.h>
+
+using namespace v8;
+
+void getAmbientLightValues(const FunctionCallbackInfo<Value>& args) {
+  Isolate *isolate = args.GetIsolate();
+
+  Local<Array> valuesArray = Array::New(isolate, 2);
+
+  io_service_t service;
+  service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("AppleLMUController"));
+  if (service) {
+    io_connect_t dataPort = 0;
+
+    if (IOServiceOpen(service, mach_task_self(), 0, &dataPort) == KERN_SUCCESS) {
+      uint32_t outputs = 2;
+      uint64_t values[outputs];
+
+      if (IOConnectCallMethod(dataPort, 0, nil, 0, nil, 0, values, &outputs, nil, 0) == KERN_SUCCESS) {
+        IOObjectRelease(service);
+        
+        valuesArray->Set(0, Number::New(isolate, values[0]));
+        valuesArray->Set(1, Number::New(isolate, values[0]));
+        
+        args.GetReturnValue().Set(valuesArray);
+
+        return;
+      }
+    }
+
+    IOObjectRelease(service);
+  }
+
+  args.GetReturnValue().Set(valuesArray);
+}
+
+void Init(Local<Object> exports, Local<Object> module) {
+  NODE_SET_METHOD(exports, "getAmbientLightValues", getAmbientLightValues);
+}
+
+NODE_MODULE(addon, Init)

@@ -1,6 +1,7 @@
 const serialNumber = require('serial-number');
 const execFile = require("child_process").execFile;
 const os = require("os");
+const Light = require('./build/Release/Light');
 
 serialNumber.preferUUID = true;
 
@@ -23,7 +24,6 @@ class TemperatureAccessory {
 	constructor (log, config) {
 		this.config = config;
 		this.name = this.config.name || 'macOS Temperature';
-		this.units = 'C';
 
 		this.informationService = new Service.AccessoryInformation();
 		this.informationService
@@ -39,21 +39,22 @@ class TemperatureAccessory {
 
 	getState (callback) {
 		execFile("room", ["-t"], (error, stdout, stderr) => {
-			if (!error) {
+			if (!error && stdout) {
 				const value = Number(stdout);
 
-				this.service
+				if (isFinite(value)) {
+					this.service
 					.getCharacteristic(Characteristic.CurrentTemperature)
 					.updateValue(value, null);
 					
-				callback(null, value);
+					callback(null, value);
 
-				return value;
-
-			} else {
-				callback(error, null);
-				return error;
+					return value;
+				}
 			}
+
+			callback(error, null);
+			return error;
 		});
 	}
 
@@ -82,28 +83,35 @@ class AmbientLightAccessory {
 	}
 
 	getState (callback) {
-		execFile("room", ["-l"], (error, stdout, stderr) => {
-			if (!error) {
-				const rawValue = Number(stdout);
-				const scaledValue = (rawValue/(2^26))*100000;
-				let value = Math.round(scaledValue/15);
+		const rawLightValues = Light.getAmbientLightValues();
+		if (rawLightValues) {
+
+			let rawValue;
+			if (rawLightValues[0] == rawLightValues[1]) {
+				rawValue = rawLightValues[0];
+			} else {
+				rawValue = (rawLightValues[0] + rawLightValues[1])/2;
+			}
+
+			if (isFinite(rawValue)) {
+				const scaledValue = (rawValue/67092480)*100000;
+				let value = Math.round(scaledValue/48);
 
 				// Enforce minimum value
 				if (value <= 0.0001)
 					value = 0.0001;
-
-				this.log(`Ambient Light: Converted from raw value ${rawValue} to ${value}`);
 
 				this.service
 					.getCharacteristic(Characteristic.CurrentAmbientLightLevel)
 					.updateValue(value, null);
 
 				callback(null, value);
-
-			} else {
-				callback(error, null);
+				return value;
 			}
-		});
+		}
+
+		callback(null, null);
+		return null;
 	}
 
 	getServices () {
