@@ -3,6 +3,11 @@
 
 using namespace v8;
 
+/**
+ * @return An array of 2 Numbers, representing Mac light sensor values, or an empty array
+ * if an error occurred. Older Macs may return the same value twice as some had two
+ * ambient light sensors, while most newer Macs have one ambient light sensor.
+ */
 void getAmbientLightValues(const FunctionCallbackInfo<Value>& args) {
     Isolate *isolate = args.GetIsolate();
 

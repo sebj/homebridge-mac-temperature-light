@@ -1,5 +1,8 @@
 #import <IOKit/IOKitLib.h>
 
+// Sourced from:
+// https://github.com/beltex/libsmc/blob/master/include/smc.h#L67-L87
+// https://github.com/beltex/SMCKit/blob/master/SMCKit/SMC.swift#L456-L524
 const char *AMBIENT_AIR_0 = "TA0P";
 const char *AMBIENT_AIR_1 = "TA1P";
 const char *CPU_0_DIE = "TC0F";

@@ -1,3 +1,7 @@
+// Heavily influenced by:
+// https://github.com/beltex/libsmc/blob/master/src/smc.c
+// https://github.com/beltex/SMCKit/blob/master/SMCKit/SMC.swift
+
 #include "Temperature.h"
 #include <vector>
 #include <node.h>
@@ -70,6 +74,9 @@ static double to_double(SP78 bytes) {
 
 static io_connect_t connection = 0;
 
+/**
+ * Opens a connection to the SMC driver. Must be executed before any other methods.
+ */
 bool openSMC() {
     io_service_t service = IOServiceGetMatchingService(kIOMasterPortDefault,
                                                        IOServiceMatching("AppleSMC"));
@@ -84,10 +91,17 @@ bool openSMC() {
     return false;
 }
 
+/**
+ * Closes the currently open connection to the SMC driver.
+ */
 bool closeSMC() {
     return IOServiceClose(connection) == kIOReturnSuccess;
 }
 
+/**
+ * Makes a call to the SMC driver with the given input data struct.
+ * @return The output data struct.
+ */
 static SMCParamStruct* callDriver(SMCParamStruct *inputStruct) {
     size_t inputStructSize  = sizeof(SMCParamStruct);
     size_t outputStructSize = sizeof(SMCParamStruct);
@@ -143,6 +157,11 @@ bool isKeyFound(const char *key) {
     return outputStructPtr != nullptr && outputStruct.result == SMCParamStruct::kSMCSuccess;
 }
 
+/**
+ * An array of every possible available Mac temperature sensor,
+ * which may or may not exist or be available depending on Mac model
+ * and OS version.
+ */
 static const char* temperatureSensors[] = {
     AMBIENT_AIR_0,
     AMBIENT_AIR_1,
@@ -176,10 +195,18 @@ static const char* temperatureSensors[] = {
     WIRELESS_MODULE
 };
 
+/**
+ * Convenience method to open a connection to the SMC driver
+ * if a connection does not already exist.
+ */
 bool autoOpenSMC() {
     return connection == 0? openSMC() : true;
 }
 
+/**
+ * @return A double representing the temperature, in Celsius,
+ * of the given temperature sensor (identified by short code).
+ */
 double getTemperature(const char *sensorCode) {
     if (autoOpenSMC()) {
         SMCBytes *bytes = readData(sensorCode);
@@ -191,6 +218,10 @@ double getTemperature(const char *sensorCode) {
     return 0.0;
 }
 
+/**
+ * @return A vector containing the short code of every available
+ * temperature sensor in the current Mac system.
+ */
 std::vector<const char *> allKnownTemperatureSensors() {
     std::vector<const char *> sensors;
     
@@ -202,6 +233,10 @@ std::vector<const char *> allKnownTemperatureSensors() {
     return sensors;
 }
 
+/**
+ * Returns an array with double temperature values (Celsius) for every
+ * available temperature sensor in the current Mac system.
+ */
 void getTemperatureSensorValues(const FunctionCallbackInfo<Value>& args) {
     std::vector<const char *> sensors = allKnownTemperatureSensors();
 
