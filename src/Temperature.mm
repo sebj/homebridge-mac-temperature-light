@@ -73,14 +73,15 @@ static io_connect_t connection = 0;
 bool openSMC() {
     io_service_t service = IOServiceGetMatchingService(kIOMasterPortDefault,
                                                        IOServiceMatching("AppleSMC"));
+
+    if (service != 0) {
+        kern_return_t result = IOServiceOpen(service, mach_task_self(), 0, &connection);
+        IOObjectRelease(service);
+
+        return result == kIOReturnSuccess;
+    }
     
-    if (service == 0)
-        return false;
-    
-    kern_return_t result = IOServiceOpen(service, mach_task_self(), 0, &connection);
-    IOObjectRelease(service);
-    
-    return result == kIOReturnSuccess;
+    return false;
 }
 
 bool closeSMC() {

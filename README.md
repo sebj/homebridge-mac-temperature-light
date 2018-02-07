@@ -1,6 +1,6 @@
 # homebridge-mac-temperature-light
 
-A [Homebridge](https://github.com/nfarina/homebridge) plugin to .
+[Homebridge](https://github.com/nfarina/homebridge) accessories to estimate room temperature, and room ambient light from your Mac's sensors.
 
 ## Installation
 
