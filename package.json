@@ -2,7 +2,6 @@
 	"name": "homebridge-mac-temperature-light",
 	"version": "1.0.0",
 	"description": "Homebridge accessories to estimate room temperature and room ambient light from Mac sensors.",
-	"private": true,
 	"os": [
 		"darwin"
 	],
