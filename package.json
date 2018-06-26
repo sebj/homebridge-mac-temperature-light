@@ -20,7 +20,5 @@
 		"type": "git",
 		"url": "git://github.com/sebj/homebridge-mac-temperature-light.git"
 	},
-	"dependencies": {
-		"serial-number": "latest"
-	}
+	"dependencies": {}
 }

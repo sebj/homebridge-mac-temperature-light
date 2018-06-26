@@ -1,8 +1,5 @@
-const serialNumber = require('serial-number');
 const Light = require('./build/Release/Light.node');
 const Temperature = require('./build/Release/Temperature.node');
-
-serialNumber.preferUUID = true;
 
 let Service, Characteristic;
 
@@ -18,17 +15,13 @@ class TemperatureAccessory {
 	constructor (log, config) {
 		this.config = config;
 		this.name = this.config.name || 'macOS Temperature';
+		this.temperatureCorrection = this.config.temperatureCorrection || -7.25;
 
 		this.informationService = new Service.AccessoryInformation();
 		this.informationService
 			.setCharacteristic(Characteristic.Manufacturer, 'Unknown')
 			.setCharacteristic(Characteristic.Model, 'Unknown Apple')
 			.setCharacteristic(Characteristic.SerialNumber, 'Unknown');
-
-		serialNumber((err, serial) => {
-			if (!err && serial)
-				this.informationService.setCharacteristic(Characteristic.SerialNumber, serial);
-		});
 
 		this.service = new Service.TemperatureSensor(this.name);
 		this.service
@@ -51,11 +44,8 @@ class TemperatureAccessory {
 
 			const count = rawTempValues.length;
 			const avgTemp = rawTempValues.reduce((acc, val) => acc + (val / count), 0);
-
-			// Extremely rough correction value based on personal testing
-			// Could definitely make config setting in future
-			const correctionValue = -7.25;
-			const correctedMinTemp = minTemp + correctionValue;
+			
+			const correctedMinTemp = minTemp + this.temperatureCorrection;
 
 			const weightedTempMean = (correctedMinTemp * 0.8) + ((avgTemp / 2) * 0.2);
 
@@ -69,17 +59,17 @@ class TemperatureAccessory {
 
 	getState (callback) {
 		callback(null, this.value);
-		return null;
+		return this.value;
 	}
 
-	getServices () {
+	getServices() {
 		return [this.informationService, this.service]
 	}
 }
 
 class AmbientLightAccessory {
 
-	constructor (log, config) {
+	constructor(log, config) {
 		this.log = log;
 		this.config = config;
 		this.name = this.config.name || 'macOS Ambient Light';
@@ -89,11 +79,6 @@ class AmbientLightAccessory {
 			.setCharacteristic(Characteristic.Manufacturer, 'Unknown')
 			.setCharacteristic(Characteristic.Model, 'Unknown Apple')
 			.setCharacteristic(Characteristic.SerialNumber, 'Unknown');
-
-		serialNumber((err, serial) => {
-			if (!err && serial)
-				this.informationService.setCharacteristic(Characteristic.SerialNumber, serial);
-		});
 
 		this.service = new Service.LightSensor(this.name);
 		this.service
@@ -123,7 +108,7 @@ class AmbientLightAccessory {
 				const lux = (-3 * Math.pow(10, -27)) * Math.pow(rawValue, 4) + (2.6 * Math.pow(10, -19)) * Math.pow(rawValue, 3) - (3.4 * Math.pow(10,-12)) * Math.pow(rawValue, 2) + (3.9 * Math.pow(10, -5)) * rawValue - 0.19;
 				// Enforce minimum (0.0001) and maximum (100,000) lux values, and round lux.
 				const value = Math.max(Math.min(100000, Math.round(lux)), 0.0001);
-
+				
 				this.value = value;
 
 				this.service
@@ -133,12 +118,12 @@ class AmbientLightAccessory {
 		}
 	}
 
-	getState (callback) {
+	getState(callback) {
 		callback(null, this.value);
-		return null;
+		return this.value;
 	}
 
-	getServices () {
+	getServices() {
 		return [this.informationService, this.service]
 	}
 }
